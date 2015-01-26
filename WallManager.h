@@ -15,7 +15,9 @@ class WallManager
 public:
     WallManager();
 
-    void updateWallColor();
+    void updateWalls();
+
+    void drawWalls(sf::RenderWindow &window);
 
     deque<Wall> walls;
 private:

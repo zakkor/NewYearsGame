@@ -3,9 +3,6 @@
 
 ParticleSystem::ParticleSystem(float x, float y)
 {
-//    particleTexture.loadFromFile("Media/particle.png");
-
-
     for (int i = 0; i < 50; ++i)
     {
         Particle newParticle;
@@ -29,21 +26,19 @@ ParticleSystem::ParticleSystem(float x, float y)
             newParticle.sprite.setPosition(x - rand() % 100, y - rand() % 100);
         }
 
-
-//        newParticle.sprite.setTexture(particleTexture);
         newParticle.sprite.setScale(rand() % 3, rand() % 3);
         newParticle.sprite.setRotation(rand() % 360);
         particles.push_back(newParticle);
     }
 }
 
-void ParticleManager::addNewSystem(float x, float y)
+void ParticleManager::addNewSystem(float x, float y, std::string particleFilename)
 {
     ParticleSystem newSystem(x, y);
-    particleTexture.loadFromFile("Media/particle.png");
-    for (auto &x : newSystem.particles)
+    particleTexture.loadFromFile("Media/" + particleFilename);
+    for (auto &j : newSystem.particles)
     {
-        x.sprite.setTexture(particleTexture);
+        j.sprite.setTexture(particleTexture);
     }
     particleSystems.push_back(newSystem);
 }
@@ -76,5 +71,16 @@ void ParticleManager::handleMovementAndDecay()
             }
         }
         clock.restart();
+    }
+}
+
+void ParticleManager::drawAllParticles(sf::RenderWindow &window)
+{
+    for (auto &x : particleSystems)
+    {
+        for (auto &y : x.particles)
+        {
+            window.draw(y.sprite);
+        }
     }
 }

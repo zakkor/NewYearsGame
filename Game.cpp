@@ -10,7 +10,7 @@ Game::Game()
     playerTexture.loadFromFile("Media/player.png");
 
     player = Player(playerTexture);
-    player.sprite.setPosition(1280/2, 720/2);
+    player.sprite.setPosition(1280 / 2, 720 / 2);
 
     view.setSize(1280, 720);
 
@@ -18,27 +18,17 @@ Game::Game()
     music.setLoop(true);
 
     font.loadFromFile("Media/font.ttf");
-    loseMessage.setFont(font);
-    loseMessage.setString("PRESS R TO RESTART");
-    loseMessage.setColor(sf::Color(255, 255, 255, 255));
-    loseMessage.setCharacterSize(70);
+    loseMessage.text.setFont(font);
+    loseMessage.text.setString("PRESS R TO RESTART");
+    loseMessage.text.setColor(sf::Color(255, 255, 255, 255));
+    loseMessage.text.setCharacterSize(70);
     //center text
-    sf::FloatRect textRect = loseMessage.getLocalBounds();
-    loseMessage.setOrigin(textRect.left + textRect.width/2.0f,
-            textRect.top  + textRect.height/2.0f);
-    loseMessage.setPosition(sf::Vector2f(1280/2.0f, (720/2.0f) - 150));
+    sf::FloatRect textRect = loseMessage.text.getLocalBounds();
+    loseMessage.text.setOrigin(textRect.left + textRect.width / 2.0f,
+            textRect.top + textRect.height / 2.0f);
+    loseMessage.text.setPosition(sf::Vector2f(1280 / 2.0f, (720 / 2.0f) - 150));
 
     gameOver = false;
-
-    loseMsgGrowing = true;
-
-    goodSpeed.loadFromFile("Media/good_Speed.png");
-    badSpeed.loadFromFile("Media/bad_Speed.png");
-    goodSpr.setTexture(goodSpeed);
-    badSpr.setTexture(badSpeed);
-
-    goodSpr.setColor(sf::Color(255, 255, 255, 0));
-    badSpr.setColor(sf::Color(255, 255, 255, 0));
 
     cameraPos = player.sprite.getPosition();
 }
@@ -67,6 +57,24 @@ void Game::processEvents()
         {
             window.close();
         }
+        if (event.type == sf::Event::KeyPressed)
+        {
+            // Restart game:
+            if (event.key.code == sf::Keyboard::R)
+            {
+//                if (gameOver)
+                {
+                    gameOver = false;
+
+                    player.sprite.setPosition(500, 500);
+                    player.setSpeed(sf::Vector2f(0, 0));
+                    speedManager.minSpeed = -10;
+                    player.fuel.currentFuel = 50;
+                    powerupManager.reloadPowerups();
+                }
+            }
+
+        }
     }
 }
 
@@ -79,38 +87,37 @@ void Game::update()
     if (player.getSpeed().x >= speedManager.minSpeed)
     {
         player.handleMovement();
-        if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
-        {
-            trailManager.addTrailAtPos(player.sprite.getPosition().x, player.sprite.getPosition().y,
-                    player.sprite.getRotation());
-        }
+
+        trailManager.spawnTrails(player.sprite.getPosition().x, player.sprite.getPosition().y,
+                player.sprite.getRotation());
+
 
         // Update mouse position according to window & world
         sf::Vector2i windowPos = sf::Mouse::getPosition(window);
         sf::Vector2f worldPos = window.mapPixelToCoords(windowPos);
         // Calculate rotation to cursor
         double angle = atan2(player.sprite.getPosition().y - worldPos.y, player.sprite.getPosition().x - worldPos.x);
-        angle =   (angle * 180 / 3.1415926536) + 180;
+        angle = (angle * 180 / 3.1415926536) + 180;
         player.sprite.setRotation((int) angle);
     }
     else
     {
         gameOver = true;
 
-        updateLoseMessage();
+        loseMessage.updateText();
     }
 
-    // Update view
+    // Update view TODO: replace with ViewHandler
     updateView();
 
     // Update background gradient
-    updateGradient();
+    background.updateGradient();
 
     // Update particles decay
     particleManager.handleMovementAndDecay();
 
     // Update the wall color
-    wallManager.updateWallColor();
+    wallManager.updateWalls();
 
     // Check for powerup collision with the player
     for (int i = 0; i < powerupManager.powerups.size(); ++i)
@@ -118,15 +125,23 @@ void Game::update()
         if (powerupManager.powerups.at(i).sprite.getGlobalBounds().intersects(player.sprite.getGlobalBounds()))
         {
             // add fuel
-            if (player.fuel.currentFuel + 15 <= player.fuel.maxFuel)
+            if (powerupManager.powerups.at(i).powerupType == Fuel)
             {
-                player.fuel.currentFuel += 30;
+                if (player.fuel.currentFuel + 15 <= player.fuel.maxFuel)
+                {
+                    player.fuel.currentFuel += 30;
+                }
             }
+            else if (powerupManager.powerups.at(i).powerupType == Boost)
+            {
+                player.addSpeed(sf::Vector2f(2, -2));
+            }
+
 
             powerupManager.powerups.erase(powerupManager.powerups.begin() + i);
 
             // Add particles
-            particleManager.addNewSystem(player.sprite.getPosition().x, player.sprite.getPosition().y);
+            particleManager.addNewSystem(player.sprite.getPosition().x, player.sprite.getPosition().y, "particle.png");
         }
     }
 
@@ -142,6 +157,9 @@ void Game::update()
 
             player.addSpeed(-newVec);
             wallManager.walls.erase(wallManager.walls.begin() + i);
+
+            //Add particles
+            particleManager.addNewSystem(player.sprite.getPosition().x, player.sprite.getPosition().y, "wallparticle.png");
         }
     }
 
@@ -152,40 +170,28 @@ void Game::update()
     // Update fuel bar
     player.fuel.updateFuelBar();
 
-    updateSpeedTextures();
+    // Update speed overlay
+    speedOverlay.updateOverlay(player.getSpeed().x, speedManager.minSpeed);
 }
 
 void Game::render()
 {
     window.clear();
 
-    // Draw gradient
-    window.draw(gradient, 4, sf::Quads);
+    // Draw Gradient
+    background.drawGradient(window);
 
     // Draw trails
-    for (auto &x : trailManager.trails)
-    {
-        window.draw(x.sprite);
-    }
-    // Draw powerups
-    for (auto &x : powerupManager.powerups)
-    {
-        window.draw(x.sprite);
-    }
-    // Draw walls
-    for (auto &x : wallManager.walls)
-    {
-        window.draw(x.sprite);
-    }
-    // Draw particles
-    for (auto &x : particleManager.particleSystems)
-    {
-        for (auto &y : x.particles)
-        {
-            window.draw(y.sprite);
-        }
-    }
+    trailManager.drawTrails(window);
 
+    // Draw powerups
+    powerupManager.drawPowerups(window);
+
+    // Draw walls
+    wallManager.drawWalls(window);
+
+    // Draw particles
+    particleManager.drawAllParticles(window);
 
     // Draw player
     window.draw(player.sprite);
@@ -193,12 +199,12 @@ void Game::render()
     // Draw UI start ---------------------
     window.setView(window.getDefaultView());
 
-    window.draw(goodSpr);
-    window.draw(badSpr);
+    // Draw Overlay
+    speedOverlay.drawOverlay(window);
 
     if (gameOver)
     {
-        window.draw(loseMessage);
+        loseMessage.drawText(window);
     }
     else
     {
@@ -217,23 +223,6 @@ void Game::updateView()
 
     if (time.asMilliseconds() >= 5)
     {
-//        if (cameraPos.x < player.sprite.getPosition().x)
-//        {
-//            cameraPos.x +=5;
-//        }
-//        if (cameraPos.x > player.sprite.getPosition().x)
-//        {
-//            cameraPos.x -=5;
-//        }
-//        if (cameraPos.y < player.sprite.getPosition().y)
-//        {
-//            cameraPos.x +=5;
-//        }
-//        if (cameraPos.y > player.sprite.getPosition().y)
-//        {
-//            cameraPos.x -=5;
-//        }
-//        view.setCenter(cameraPos.x, cameraPos.y);
         view.setCenter(player.sprite.getPosition());
         cameraClock.restart();
     }
@@ -245,7 +234,7 @@ void Game::updateView()
     }
 
 
-    view.setSize((player.getSpeed().x * 50) +640 , (player.getSpeed().x * 50) + 360);
+    view.setSize((player.getSpeed().x * 50) + 640, (player.getSpeed().x * 50) + 360);
 
 
 //    view.setRotation(player.sprite.getRotation() + 90);
@@ -254,72 +243,4 @@ void Game::updateView()
     window.setView(view);
 }
 
-void Game::updateGradient()
-{
-    sf::Time time = musicClock.getElapsedTime();
 
-    if (time.asMilliseconds() >= 30)
-    {
-        for (int i = 0; i <= 3; i++)
-        {
-            gradient[i].color.r += 2;
-            gradient[i].color.g += 7;
-            gradient[i].color.b += 4;
-        }
-
-        musicClock.restart();
-    }
-}
-
-void Game::updateLoseMessage()
-{
-    sf::Time time = messageClock.getElapsedTime();
-
-    if (time.asMilliseconds() >= 30)
-    {
-        loseMessage.setColor(sf::Color((sf::Uint8) (loseMessage.getColor().r + 3),
-                (sf::Uint8) (loseMessage.getColor().g + 7),
-                (sf::Uint8) (loseMessage.getColor().b + 5)));
-
-        messageClock.restart();
-    }
-
-    if (loseMsgGrowing)
-    {
-        if (loseMessage.getScale().x <= 1.5f)
-        {
-            loseMessage.scale(1.005, 1.005);
-        }
-        else
-        {
-            loseMsgGrowing = false;
-        }
-    }
-    else
-    {
-        if (loseMessage.getScale().x >= 1.0f)
-        {
-            loseMessage.scale(0.995f, 0.995f);
-        }
-        else
-        {
-            loseMsgGrowing = true;
-        }
-    }
-}
-
-void Game::updateSpeedTextures()
-{
-    double speedDiff = player.getSpeed().x - speedManager.minSpeed;
-    if (speedDiff <= 10)
-    {
-        badSpr.setColor(sf::Color(255, 255, 255, (sf::Uint8) ((10 - speedDiff) * 255 / 10)));
-//        goodSpr.setColor(sf::Color(255, 255, 255, 0));
-    }
-    else if (speedDiff > 10 && speedDiff < 20)
-    {
-//        badSpr.setColor(sf::Color(255, 255, 255, 0));
-        goodSpr.setColor(sf::Color(255, 255, 255, (sf::Uint8) ((speedDiff - 10) * 255 / 20)));
-    }
-
-}

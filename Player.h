@@ -8,6 +8,7 @@ public:
     Player();
     Player(sf::Texture &newTexture);
     void addSpeed(sf::Vector2f speed);
+    void setSpeed(sf::Vector2f speed);
     sf::Vector2f getSpeed();
     void handleMovement();
 

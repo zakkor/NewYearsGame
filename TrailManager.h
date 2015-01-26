@@ -13,11 +13,17 @@ class TrailManager
 {
 public:
     TrailManager();
-    void addTrailAtPos(float x, float y, float rotation);
+    void addTrailAtPos(float x, float y, float rotation, sf::Color color);
+
+    void spawnTrails(float x, float y, float rotation);
+
     void handleDecay();
+
+    void drawTrails(sf::RenderWindow &window);
 
     deque<Trail> trails;
 private:
     sf::Texture trailTexture;
-    sf::Clock clock;
+    sf::Clock decayClock, alternateClock;
+    bool spawningCyan;
 };

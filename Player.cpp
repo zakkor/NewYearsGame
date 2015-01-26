@@ -26,6 +26,12 @@ void Player::addSpeed(sf::Vector2f speed)
     this->speed.y += speed.y;
 }
 
+void Player::setSpeed(sf::Vector2f speed)
+{
+    this->speed.x = speed.x;
+    this->speed.y = speed.y;
+}
+
 sf::Vector2f Player::getSpeed()
 {
     return this->speed;
@@ -53,9 +59,9 @@ void Player::handleMovement()
         if (fuel.currentFuel > 0)
         {
             fuel.currentFuel -= 0.5;
-
+            addSpeed(sf::Vector2f(0.1, -0.1));
         }
-        addSpeed(sf::Vector2f(0.1, -0.1));
+
     }
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
     {
@@ -101,3 +107,5 @@ void Player::handleMovement()
 
     sprite.move(speed_x, speed_y);
 }
+
+

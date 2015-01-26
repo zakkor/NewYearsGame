@@ -3,12 +3,11 @@
 
 SpeedManager::SpeedManager()
 {
-    minSpeed = -10;
+    minSpeed = -5;
 
 }
 
 void SpeedManager::updateSpeed()
 {
     minSpeed += 0.01;
-    std::cout << "MIN SPEED = " << minSpeed << "\n";
 }

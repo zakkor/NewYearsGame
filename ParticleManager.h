@@ -19,9 +19,11 @@ public:
 class ParticleManager
 {
 public:
-    void addNewSystem(float x, float y);
+    void addNewSystem(float x, float y, std::string particleFilename);
 
     void handleMovementAndDecay();
+
+    void drawAllParticles(sf::RenderWindow &window);
 
     deque<ParticleSystem> particleSystems;
     sf::Clock clock;

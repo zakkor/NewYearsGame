@@ -7,7 +7,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set(SOURCE_FILES main.cpp Game.cpp Game.h TextureHandler.cpp TextureHandler.h
 Player.cpp Player.h TrailManager.cpp TrailManager.h PowerupManager.cpp PowerupManager.h
 WallManager.h WallManager.cpp ParticleManager.cpp ParticleManager.h Fuel.cpp Fuel.h
-SpeedManager.cpp SpeedManager.h)
+SpeedManager.cpp SpeedManager.h AnimatedText.cpp AnimatedText.h SpeedOverlay.cpp SpeedOverlay.h
+Background.cpp Background.h)
 
 
 # Enable debug symbols by default

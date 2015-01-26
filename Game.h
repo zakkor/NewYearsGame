@@ -7,6 +7,9 @@
 #include "WallManager.h"
 #include "ParticleManager.h"
 #include "SpeedManager.h"
+#include "AnimatedText.h"
+#include "SpeedOverlay.h"
+#include "Background.h"
 //#include <random>
 
 class Game
@@ -21,18 +24,17 @@ private:
     void update();
     void render();
 
+
+    //TODO: need to refactor all these into objects
     void updateView();
-
-    void updateGradient();
-
-    void updateSpeedTextures();
-
-    void updateLoseMessage();
 
     sf::RenderWindow window;
 
+    Background background;
 
     Player player;
+
+    sf::Vector2f cameraPos;
 
     SpeedManager speedManager;
     TrailManager trailManager;
@@ -45,28 +47,16 @@ private:
 
 
     sf::View view;
-    sf::Vector2f cameraPos;
 
+    sf::Texture playerTexture;
 
-    sf::Vertex gradient[4] =
-    {
-        sf::Vertex(sf::Vector2f(0, 0), sf::Color(0, 0, 0)),
-        sf::Vertex(sf::Vector2f(0, 10000), sf::Color(0, 0, 0)),
-        sf::Vertex(sf::Vector2f(10000, 10000), sf::Color(0, 0, 0)),
-        sf::Vertex(sf::Vector2f(10000, 0), sf::Color(0, 0, 0))
-    };
-
-    sf::Texture playerTexture,
-            goodSpeed, badSpeed;
-    sf::Sprite badSpr, goodSpr;
+    SpeedOverlay speedOverlay;
 
     sf::Music music;
 
     sf::Font font;
 
-    sf::Text loseMessage;
-        bool loseMsgGrowing;
+    AnimatedText loseMessage;
 
-
-    sf::Clock musicClock, cameraClock, messageClock;
+    sf::Clock musicClock, cameraClock;
 };
